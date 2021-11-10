@@ -13,7 +13,7 @@ This is something I was working for a private server to increase server activity
 - Run `npm install`.
 - Open the `config.json` file and fill in all the details.
 ```json
-    {
+{
     "important_settings": {
         "bot_token": "BOT TOKEN HERE",
         "guild_id": "GUILD ID HERE",
