@@ -1,0 +1,18 @@
+{
+    "important_settings": {
+        "bot_token": "BOT TOKEN HERE",
+        "guild_id": "GUILD ID HERE",
+        "prefix": "-",
+        "timezone": "List of timezones - https://www.php.net/manual/en/timezones.php",
+        "weekly_event_start_day": "0-6",
+        "weekly_event_end_day": "0-6",
+        "vote_points": 2,
+        "message_points": 0.2,
+        "message_points_cooldown": true,
+        "winners_announcement_channel": "CHANNEL ID HERE"
+    },
+    
+    "optional_settings": {
+        "staff_role_id": "ROLE ID HERE"
+    }
+}
