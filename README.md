@@ -51,4 +51,4 @@ This is something I was working for a private server to increase server activity
 - `message_points_cooldown` can be changed to *true* or *false*. If set to true, there will be a
 1-minute points cooldown before a user can receive points for the next message they send. If the value provided is detected as invalid, then it will default to **true**.
 - `winner_announcement_channel` is the channel where the top 3 members are announced after the event ends.
-- `staff_role_id` is an optional setting. It allows anyone with this role to add and remove points from a user and check how many points a user has. If no value is provided, then it will defalt to an ADMINISTRATOR-ONLY system.
+- `staff_role_id` is an optional setting. It allows anyone with this role to add and remove points from a user and check how many points a user has. If no value is provided, then it will default to an ADMINISTRATOR-ONLY system.
