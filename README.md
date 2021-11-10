@@ -34,7 +34,7 @@ This is something I was working for a private server to increase server activity
 ```
 
 - For `bot_token`, paste in your bot's token. You can find your bot's token in the Discord Developer Portal.
-- For `guild_id`, paste in the ID of the server where you want the events to take place.
+- For `guild_id`, paste in the ID of the server where you want the events to take place in.
 - For `prefix`, type in any prefix of your choice.
 - For `timezone`, go through https://www.php.net/manual/en/timezones.php and select your timezone or a timezone with the same time as yours. The default timezone is Europe/London.
 - For `weekly_event_start_date`, type in the day when you want the event to start weekly. Day must be given as 0 (Sunday), 1 (Monday), 2 (Tuesday), 3 (Wednesday), 4 (Thurday), 5 (Friday), or 6 (Saturday). For example;
