@@ -47,6 +47,7 @@ const checker = (async () => {
 
 
     try {
+        if (settings.important_settings.manual_mode == true) return;
         const tzchecker = new CronJob(`* * * * * *`, function () {
             timezone = "valid";
             console.log("✔ Timezone Validated!".green);
@@ -146,6 +147,7 @@ const embeds = (color, description) => {
 // CRON JOBS
 
 const job1 = new CronJob(`0 0 * * * ${settings.important_settings.weekly_event_start_day}`, function () {
+    if (settings.important_settings.manual_mode == true) return;
     if (errors !== "NONEAT") return;
     if (!config.get(`${settings.important_settings.guild_id}`)) {
         config.set(`${settings.important_settings.guild_id}.status`, true);
@@ -156,6 +158,7 @@ const job1 = new CronJob(`0 0 * * * ${settings.important_settings.weekly_event_s
 job1.start();
 
 const job2 = new CronJob(`0 0 * * * ${settings.important_settings.weekly_event_end_day}`, async function () {
+    if (settings.important_settings.manual_mode == true) return;
     if (errors !== "NONEAT") return;
     winners();
 }, null, true, (timezone === "valid") ? settings.important_settings.timezone : "Europe/London");
