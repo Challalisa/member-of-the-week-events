@@ -210,13 +210,13 @@ client.on('messageCreate', async msg => {
             return (a.data.vote_points + a.data.message_points + a.data.credited_points) - (b.data.vote_points + b.data.message_points + b.data.credited_points);
         });
         contestants.reverse();
-        const final = contestants.slice(0, 3);
+        const final = contestants.slice(0, settings.important_settings.no_of_winners);
         final.forEach((m) => {
             const points = m.data.message_points + m.data.vote_points + m.data.credited_points;
             list = list.concat(`• <@${m.data.member_id}> **(${m.data.member_name}#${m.data.member_discriminator})** with ***${((points) % 1 != 0) ? points.toFixed(2) : points}*** ${((points % 1 == 1)) ? "point" : "points"}\n`)
         });
         const embed = new MessageEmbed()
-            .setTitle("Top 3 members of the week!")
+            .setTitle(`Top ${settings.important_settings.no_of_winners} members of the week!`)
             .setDescription(list)
             .setColor("87CEFA")
             .setTimestamp();

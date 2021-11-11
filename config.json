@@ -9,6 +9,7 @@
         "vote_points": 2,
         "message_points": 0.2,
         "message_points_cooldown": true,
+        "no_of_winners": 3,
         "winners_announcement_channel": "CHANNEL ID HERE"
     },
     
