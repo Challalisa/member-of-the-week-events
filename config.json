@@ -3,6 +3,7 @@
         "bot_token": "BOT TOKEN HERE",
         "guild_id": "GUILD ID HERE",
         "prefix": "-",
+        "manual_mode": true,
         "timezone": "List of timezones - https://www.php.net/manual/en/timezones.php",
         "weekly_event_start_day": "0-6",
         "weekly_event_end_day": "0-6",
