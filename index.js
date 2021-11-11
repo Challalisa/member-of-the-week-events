@@ -2,7 +2,7 @@ const { Client, MessageEmbed } = require('discord.js');
 const client = new Client({ intents: ["GUILDS", "GUILD_MESSAGES"] });
 const db = require('quick.db');
 const CronJob = require('cron').CronJob;
-const colors = require('colors');
+require('colors');
 const members = new db.table("members");
 const config = new db.table("config");
 const settings = require('./config.json');
@@ -36,6 +36,7 @@ const checker = (async () => {
         });
 
     if (settings.important_settings.prefix === "") {
+        client.destroy();
         console.log("Please provide a prefix for the bot!\nShutting down".red)
         process.exit(1);
     } else {
@@ -58,6 +59,7 @@ const checker = (async () => {
     if (guild === true) {
         const g = await client.guilds.fetch(settings.important_settings.guild_id);
         if (!g.me.permissions.has("ADMINISTRATOR")) {
+            client.destroy();
             console.log("Missing permissions! Please add the ADMINISTRATOR permission to my bot so I can work efficiently.\nShutting down...".red);
             process.exit(1);
         }
@@ -88,6 +90,52 @@ const checker = (async () => {
 });
 
 // FUNCTIONS
+
+const winners = (async () => {
+    const channel = await client.channels.fetch(settings.important_settings.winners_announcement_channel);
+    let list = '';
+    const contestants = await members.all();
+    contestants.sort(function (a, b) {
+        return (a.data.vote_points + a.data.message_points) - (b.data.vote_points + b.data.message_points);
+    });
+    contestants.reverse();
+    const final = contestants.slice(0, settings.important_settings.no_of_winners);
+    final.forEach((m) => {
+        const points = m.data.message_points + m.data.vote_points + m.data.credited_points;
+        let emoji = "•";
+        if (final[0]) {
+            if (final[0].data == m.data) {
+                emoji = ":first_place:";
+            }
+        } 
+        if (final[1]) {
+            if(final[1].data == m.data) {
+                emoji = ":second_place:";
+            }
+        }
+        if (final[2]) {
+            if(final[2].data == m.data) {
+                emoji = ":third_place:";
+            }
+        }
+
+        list = list.concat(`${emoji} <@${m.data.member_id}> **(${m.data.member_name}#${m.data.member_discriminator})** with ***${((points) % 1 != 0) ? points.toFixed(2) : points}*** ${((points % 1 == 1)) ? "point" : "points"}\n`)
+    });
+    const embed = new MessageEmbed()
+        .setTitle(`Top ${settings.important_settings.no_of_winners} members of the week!`)
+        .setDescription(list)
+        .setColor("87CEFA")
+        .setTimestamp();
+    channel.send({ embeds: [embed] });
+
+    const m = await members.all();
+    m.forEach((mem) => {
+        members.delete(mem.ID);
+    });
+
+    config.set(`${settings.important_settings.guild_id}.status`, false);
+});
+
 const embeds = (color, description) => {
     const embed = new MessageEmbed()
         .setDescription(description)
@@ -109,31 +157,35 @@ job1.start();
 
 const job2 = new CronJob(`0 0 * * * ${settings.important_settings.weekly_event_end_day}`, async function () {
     if (errors !== "NONEAT") return;
-    config.set(`${settings.important_settings.guild_id}.status`, false);
-    const channel = await client.channels.fetch(settings.important_settings.winners_announcement_channel);
-    let list = '';
-    const contestants = await members.all();
-    contestants.sort(function (a, b) {
-        return (a.data.vote_points + a.data.message_points) - (b.data.vote_points + b.data.message_points);
-    });
-    contestants.reverse();
-    const final = contestants.slice(0, settings.important_settings.no_of_winners);
-    final.forEach((m) => {
-        const points = m.data.message_points + m.data.vote_points + m.data.credited_points;
-        list = list.concat(`• <@${m.data.member_id}> **(${m.data.member_name}#${m.data.member_discriminator})** with ***${((points) % 1 != 0) ? points.toFixed(2) : points}*** ${((points % 1 == 1)) ? "point" : "points"}\n`)
-    });
-    const embed = new MessageEmbed()
-        .setTitle(`Top ${settings.important_settings.no_of_winners} members of the week!`)
-        .setDescription(list)
-        .setColor("87CEFA")
-        .setTimestamp();
-    channel.send({ embeds: [embed] });
+    winners();
 }, null, true, (timezone === "valid") ? settings.important_settings.timezone : "Europe/London");
 
 job2.start();
 
 client.on('messageCreate', async msg => {
     if (msg.author.bot) return;
+
+    const args = msg.content.trim().split(/ +/g);
+    const cmd = args[0].slice(settings.important_settings.prefix.length).toLowerCase();
+
+    if (cmd === "start") {
+        if (settings.important_settings.manual_mode == false) return;
+        if (config.get(`${settings.important_settings.guild_id}.status`) == true) {
+            msg.reply({ embeds: [embeds("FF0000", ":x:  The event is already in progress!")] });
+        } else {
+            config.set(`${settings.important_settings.guild_id}.status`, true);
+            msg.reply({ embeds: [embeds("32CD32", ":white_check_mark:  Started the event successfully!")] })
+        }
+    } else if (cmd === "end") {
+        if (settings.important_settings.manual_mode == false) return;
+        if (!msg.member.permissions.has("ADMINISTRATOR")) return;
+        if (config.get(`${settings.important_settings.guild_id}.status`) !== true) {
+            msg.reply({ embeds: [embeds("FF0000", `:x:  The event is not in progress! Do **${settings.important_settings.prefix}start** to start the event.`)] })
+        } else {
+            winners();
+        }
+    }
+
     if (!config.get(`${settings.important_settings.guild_id}.status`)) return;
 
 
@@ -174,9 +226,6 @@ client.on('messageCreate', async msg => {
         }
     }
 
-    const args = msg.content.trim().split(/ +/g);
-    const cmd = args[0].slice(settings.important_settings.prefix.length).toLowerCase();
-
     if (cmd === "vote") {
         if (members.get(`${msg.author.id}.voted`)) return msg.reply({ embeds: [embeds("FF0000", ":x:  You have already voted for someone this week!")] })
         if (!args[1]) {
@@ -201,27 +250,6 @@ client.on('messageCreate', async msg => {
                 }
             }
         }
-    } else if (cmd === "end") {
-        if (!msg.member.permissions.has("ADMINISTRATOR")) return;
-        const channel = await msg.guild.channels.fetch(settings.important_settings.winners_announcement_channel);
-        let list = '';
-        const contestants = await members.all();
-        contestants.sort(function (a, b) {
-            return (a.data.vote_points + a.data.message_points + a.data.credited_points) - (b.data.vote_points + b.data.message_points + b.data.credited_points);
-        });
-        contestants.reverse();
-        const final = contestants.slice(0, settings.important_settings.no_of_winners);
-        console.log(final);
-        final.forEach((m) => {
-            const points = m.data.message_points + m.data.vote_points + m.data.credited_points;
-            list = list.concat(`• <@${m.data.member_id}> **(${m.data.member_name}#${m.data.member_discriminator})** with ***${((points) % 1 != 0) ? points.toFixed(2) : points}*** ${((points % 1 == 1)) ? "point" : "points"}\n`)
-        });
-        const embed = new MessageEmbed()
-            .setTitle(`Top ${settings.important_settings.no_of_winners} members of the week!`)
-            .setDescription(list)
-            .setColor("87CEFA")
-            .setTimestamp();
-        channel.send({ embeds: [embed] });
     } else if (cmd === "points") {
         if (msg.member.roles.cache.find(r => r.id === settings.optional_settings.staff_role_id) || msg.member.permissions.has("ADMINISTRATOR")) {
             if (args[1]) {
@@ -300,7 +328,7 @@ client.login(settings.important_settings.bot_token)
                 console.log("The bot token is invalid!".red);
                 process.exit(1)
             } else {
-                console.log("Please try again later. If the problem persists, open an issue at out github.".red);
+                console.log("Please try again later. If the problem persists, open an issue at our github.".red);
             }
         }
     });
